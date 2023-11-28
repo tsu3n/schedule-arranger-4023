@@ -14,7 +14,7 @@ router.post(
     await param('scheduleId').isUUID('4').withMessage('有効なスケジュール ID を指定してください。').run(req);
     await param('candidateId').isInt().withMessage('有効な候補 ID を指定してください。').run(req);
     await param('userId').isInt().custom((value,{req})=>{
-      return parseInt(value)===parseInt(req.res.id);
+      return parseInt(value)===parseInt(req.user.id);
     }).withMessage('ユーザー ID が不正です。').run(req);
     const errors=validationResult(req);
 
