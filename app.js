@@ -6,22 +6,22 @@ const logger = require('morgan');
 const helmet = require('helmet');
 const session = require('express-session');
 const passport = require('passport');
-const csurf=require('tiny-csrf');
+const csurf = require('tiny-csrf');
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient({ log: [ 'query' ] });
+const prisma = new PrismaClient({ log: ['query'] });
 
 const GitHubStrategy = require('passport-github2').Strategy;
-const GITHUB_CLIENT_ID = '2f831cb3d4aac02393aa';
-const GITHUB_CLIENT_SECRET = '9fbc340ac0175123695d2dedfbdf5a78df3b8067';
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '2f831cb3d4aac02393aa';
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '9fbc340ac0175123695d2dedfbdf5a78df3b8067';
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
 passport.use(new GitHubStrategy({
-    clientID: GITHUB_CLIENT_ID,
-    clientSecret: GITHUB_CLIENT_SECRET,
-    callbackURL: 'http://localhost:8000/auth/github/callback'
-  },
+  clientID: GITHUB_CLIENT_ID,
+  clientSecret: GITHUB_CLIENT_SECRET,
+  callbackURL: process.env.CALLBACK_URL || 'http://localhost:8000/auth/github/callback'
+},
   (accessToken, refreshToken, profile, done) => {
     process.nextTick(async () => {
       const userId = parseInt(profile.id);
@@ -90,24 +90,24 @@ app.get(
   '/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   (req, res) => {
-    const loginFrom=req.cookies.loginFrom;
+    const loginFrom = req.cookies.loginFrom;
     // オープンリダイレクタ脆弱性対策
-    if (loginFrom&&loginFrom.startsWith('/')){
+    if (loginFrom && loginFrom.startsWith('/')) {
       res.clearCookie('loginFrom');
       res.redirect(loginFrom);
-    }else{
-    res.redirect('/');
-  }
+    } else {
+      res.redirect('/');
+    }
   }
 );
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
